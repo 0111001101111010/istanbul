@@ -6,11 +6,10 @@ var path = require('path'),
     rimraf = require('rimraf'),
     mkdirp = require('mkdirp'),
     INPUT_DIR_CC = path.join(__dirname, '../other/data-complete-copy/'),
-    OUTPUT_DIR = path.resolve(process.cwd(), 'output'),
+    OUTPUT_DIR = path.resolve(__dirname, 'output'),
     COMMAND = 'instrument',
     DIR = path.resolve(__dirname, 'sample-project'),
     helper = require('../cli-helper'),
-    existsSync = fs.existsSync || path.existsSync,
     run = helper.runCommand.bind(null, COMMAND),
     INPUT_DIR_JS_FILE_COUNT = 0;
 
@@ -18,7 +17,7 @@ fs.readdirSync(INPUT_DIR_CC).forEach(function(file) {
     var extenstion = path.extname(file);
 
     if (extenstion === '.js') {
-        INPUT_DIR_JS_FILE_COUNT++;
+        INPUT_DIR_JS_FILE_COUNT += 1;
     }
 });
 
@@ -74,7 +73,7 @@ module.exports = {
         });
     },
     "should instrument multiple files": function (test) {
-        run([ 'lib', '--output', OUTPUT_DIR, '-v' ], function (results) {
+        run([ 'lib', '--output', OUTPUT_DIR, '-v', '-x', 'util/es-module.js' ], function (results) {
             test.ok(results.succeeded());
             test.ok(existsSync(path.resolve(OUTPUT_DIR, 'foo.js')));
             test.ok(existsSync(path.resolve(OUTPUT_DIR, 'bar.js')));
@@ -88,7 +87,7 @@ module.exports = {
         });
     },
     "should instrument multiple files without errors": function (test) {
-        run([ 'lib', '--output', OUTPUT_DIR, '-x', '**/bad.js' ], function (results) {
+        run([ 'lib', '--output', OUTPUT_DIR, '-x', '**/bad.js', '-x', 'util/es-module.js' ], function (results) {
             test.ok(results.succeeded());
             test.ok(existsSync(path.resolve(OUTPUT_DIR, 'foo.js')));
             test.ok(existsSync(path.resolve(OUTPUT_DIR, 'bar.js')));
@@ -171,6 +170,12 @@ module.exports = {
             test.ok(results.succeeded());
             test.equal(fs.readdirSync(OUTPUT_DIR).length, inputFileCount);
             test.ok(existsSync(path.resolve(OUTPUT_DIR, 'subdir', 'x.css')));
+            test.done();
+        });
+    },
+    "should instrument es modules": function(test) {
+        run([ 'lib/util/es-module.js', '--es-modules'], function (results) {
+            test.ok(results.succeeded());
             test.done();
         });
     }
